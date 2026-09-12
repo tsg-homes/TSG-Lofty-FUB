@@ -151,12 +151,12 @@
       <p id="greeting"></p>
 
       <p class="q" id="rateQ">How would you rate your experience with us?</p>
-      <div class="stars" role="radiogroup" aria-labelledby="rateQ" id="stars">
-        <button type="button" class="star" role="radio" aria-checked="false" aria-label="1 star" data-v="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
-        <button type="button" class="star" role="radio" aria-checked="false" aria-label="2 stars" data-v="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
-        <button type="button" class="star" role="radio" aria-checked="false" aria-label="3 stars" data-v="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
-        <button type="button" class="star" role="radio" aria-checked="false" aria-label="4 stars" data-v="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
-        <button type="button" class="star" role="radio" aria-checked="false" aria-label="5 stars" data-v="5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+      <div class="stars" role="group" aria-labelledby="rateQ" id="stars">
+        <button type="button" class="star" aria-pressed="false" aria-label="1 star" data-v="1"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="2 stars" data-v="2"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="3 stars" data-v="3"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="4 stars" data-v="4"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
+        <button type="button" class="star" aria-pressed="false" aria-label="5 stars" data-v="5"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.3l-6 3.3 1.3-6.6L2.4 9.4l6.7-.8z"/></svg></button>
       </div>
       <p class="stars-hint" id="starsHint" aria-live="polite"></p>
 
@@ -266,47 +266,16 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
     $('alreadyHead').textContent = n;
   }
 
-  // ---- Stars: a radiogroup. Click, Space/Enter, and arrow keys all select.
+  // ---- Stars: five buttons. Tap, or Tab to one and press Space or Enter.
   var starEls = Array.prototype.slice.call(document.querySelectorAll('#stars .star'));
   function paintStars(v, animate) {
     starEls.forEach(function (el) {
-      var on = Number(el.dataset.v) <= v;
-      var was = el.classList.contains('on');
-      el.classList.toggle('on', on);
-      el.setAttribute('aria-checked', Number(el.dataset.v) === v ? 'true' : 'false');
-      el.tabIndex = (Number(el.dataset.v) === v || (v === 0 && el.dataset.v === '1')) ? 0 : -1;
-      if (animate && on && !was) {
-        el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-      }
-    });
-  }
-  starEls.forEach(function (el) {
     el.addEventListener('click', function () { chooseRating(Number(el.dataset.v)); });
-    el.addEventListener('keydown', function (ev) {
-      var v = Number(el.dataset.v), next = null;
-      if (ev.key === 'ArrowRight' || ev.key === 'ArrowUp') next = Math.min(5, v + 1);
-      if (ev.key === 'ArrowLeft' || ev.key === 'ArrowDown') next = Math.max(1, v - 1);
-      if (ev.key === 'Home') next = 1;
-      if (ev.key === 'End') next = 5;
-      if (next !== null) { ev.preventDefault(); previewRating(next); starEls[next - 1].focus(); }
-    });
   });
-
-  // Arrow keys move the selection without committing it, so a keyboard user can
-  // walk from 1 to 5 without locking in a low rating on the first step. The
-  // rating commits after a short pause, or at once on Enter, Space or a tap.
-  var previewTimer = null;
-  function previewRating(v) {
-    paintStars(v, true);
-    state.rating = v;
-    if (previewTimer) clearTimeout(previewTimer);
-    previewTimer = setTimeout(function () { previewTimer = null; chooseRating(v); }, 700);
-  }
 
   function pathFor(r) { return r >= 4 ? 'happy' : 'low'; }
 
   function chooseRating(v) {
-    if (previewTimer) { clearTimeout(previewTimer); previewTimer = null; }
     paintStars(v, true);
     state.rating = v;
     var wanted = pathFor(v);

@@ -61,11 +61,10 @@ async function shot(page, name, w) {
     await page.waitForSelector('#rate:not(.hidden)');
     await shot(page, '09-button-unrated', w);
     await page.focus('.star[data-v="1"]');
-    await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight'); await page.keyboard.press('ArrowRight');
-    const lowEarly = await page.$eval('#low', el => !el.classList.contains('hidden'));
-    if (lowEarly) failures.push(`${w}px: arrow keys committed a low rating mid-walk`);
+    await page.keyboard.press('Tab'); await page.keyboard.press('Tab'); await page.keyboard.press('Tab');
+    await page.keyboard.press('Space');
     await page.waitForSelector('#happy:not(.hidden)', { timeout: 5000 });
-    const checked = await page.$eval('.star[aria-checked="true"]', el => el.dataset.v);
+    const checked = await page.$eval('.star[aria-pressed="true"]', el => el.dataset.v);
     if (checked !== '4') failures.push(`${w}px: keyboard rating expected 4 got ${checked}`);
     await shot(page, '10-keyboard-4', w);
 
