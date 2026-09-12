@@ -270,6 +270,16 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
   var starEls = Array.prototype.slice.call(document.querySelectorAll('#stars .star'));
   function paintStars(v, animate) {
     starEls.forEach(function (el) {
+      var on = Number(el.dataset.v) <= v;
+      var was = el.classList.contains('on');
+      el.classList.toggle('on', on);
+      el.setAttribute('aria-pressed', Number(el.dataset.v) === v ? 'true' : 'false');
+      if (animate && on && !was) {
+        el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
+      }
+    });
+  }
+  starEls.forEach(function (el) {
     el.addEventListener('click', function () { chooseRating(Number(el.dataset.v)); });
   });
 
