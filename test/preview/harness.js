@@ -10,9 +10,8 @@ const PAGE = path.join(__dirname, '..', '..', 'apps-script', 'ReviewPage.html');
 const BASE_INIT = {
   ok: true, state: 'rate',
   firstName: 'Molly', addressLine1: '2137 Christian St', addressLine2: 'Philadelphia, PA 19146',
-  role: 'buyer', agents: ['Alex Clark', 'Chelsey Stiles', 'Francini Castor Weil', 'Jason Wittenstein', 'Rayma Abdallah', 'Ryan Stawasz'],
-  agentName: 'Alex Clark', email: 'molly@example.com', dealId: 89,
-  token: null, lockedPath: null, savedRating: 0, status: 'new', rating: 0, links: null
+  role: 'buyer', email: 'molly@example.com', dealId: 89,
+  token: null, savedRating: 0, status: 'new', rating: 0, links: null
 };
 
 const SCENARIOS = {
@@ -20,7 +19,7 @@ const SCENARIOS = {
   'email-2':   { init: { rating: 2 } },
   'button':    { init: { rating: 0 } },
   'seller-4':  { init: { rating: 4, role: 'seller', firstName: 'Aerin', addressLine1: '820 N Burns St #6', addressLine2: 'Philadelphia, PA 19130' } },
-  'resume-low':{ init: { rating: 5, lockedPath: 'low', savedRating: 2, token: 'tok_existing', status: 'rated' } },
+  'resume':    { init: { rating: 0, savedRating: 2, token: 'tok_existing', status: 'rated' } },
   'already':   { init: { status: 'reviewed', token: 'tok_done' } },
   'notfound':  { init: { ok: false, state: 'notfound' } },
   'failed':    { init: { ok: false, state: 'error' } },
@@ -30,18 +29,15 @@ const SCENARIOS = {
 // Mock server: mirrors the locking rules the real doPost enforces.
 const MOCK_SERVER = `
 (function(){
-  var srv = { path: INIT.lockedPath || null, status: INIT.status || 'new', rating: INIT.savedRating || 0, token: INIT.token || null, calls: [] };
+  var srv = { status: INIT.status || 'new', rating: INIT.savedRating || 0, token: INIT.token || null, calls: [] };
   window.__mockServer = srv;
   window.fetch = function (url, opts) {
     var b = JSON.parse(opts.body); srv.calls.push(b);
     var res = { ok: true };
     if (b.action === 'review.rate') {
-      var wanted = b.rating >= 4 ? 'happy' : 'low';
       if (!srv.token) srv.token = 'tok_' + Math.random().toString(36).slice(2);
-      if (srv.path === 'low' && wanted === 'happy') { /* locked */ }
-      else srv.path = wanted;
       srv.rating = b.rating; srv.status = 'rated';
-      res = { ok: true, token: srv.token, path: srv.path, status: srv.status, rating: srv.rating };
+      res = { ok: true, token: srv.token, status: srv.status };
     } else if (b.action === 'review.submit') {
       srv.status = 'reviewed';
       res = { ok: true, status: 'reviewed', links: { google: 'https://g.page/r/EXAMPLE/review', zillow: 'https://www.zillow.com/profile/example-agent/' } };

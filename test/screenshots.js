@@ -46,12 +46,14 @@ async function shot(page, name, w) {
     await page.check('#fbContact');
     await page.fill('#fbPhone', '215 555 0142');
     await shot(page, '06-low-filled', w);
-    // Locked: tapping 5 on the low path must not reveal the happy box.
+    // Nothing locks before submit: 5 stars switches to the happy box, 2 switches back.
     await page.click('.star[data-v="5"]');
-    await page.waitForTimeout(100);
-    const happyVisible = await page.$eval('#happy', el => !el.classList.contains('hidden'));
-    if (happyVisible) failures.push(`${w}px: low path flipped to happy`);
-    await shot(page, '07-low-locked-after-5', w);
+    await page.waitForSelector('#happy:not(.hidden)', { timeout: 5000 });
+    await shot(page, '07-low-then-5', w);
+    await page.click('.star[data-v="2"]');
+    await page.waitForSelector('#low:not(.hidden)', { timeout: 5000 });
+    const kept = await page.inputValue('#fbComment');
+    if (!/Showings/.test(kept)) failures.push(`${w}px: feedback text lost when switching stars`);
     await page.click('#submitFeedback');
     await page.waitForSelector('#doneLow:not(.hidden)');
     await shot(page, '08-low-done', w);
@@ -75,13 +77,12 @@ async function shot(page, name, w) {
     if (!/sell this home/.test(g)) failures.push(`${w}px: seller greeting wrong: ${g}`);
     await shot(page, '11-seller', w);
 
-    // 5. Resume a locked low request from a 5-star email link
-    await page.setContent(buildPreview('resume-low'));
+    // 5. Resume an unsubmitted 2-star request via the button link
+    await page.setContent(buildPreview('resume'));
     await page.waitForSelector('#low:not(.hidden)');
-    await page.waitForTimeout(100);
-    const hv = await page.$eval('#happy', el => !el.classList.contains('hidden'));
-    if (hv) failures.push(`${w}px: resumed low request flipped to happy`);
-    await shot(page, '12-resume-low', w);
+    const pressed = await page.$eval('.star[aria-pressed="true"]', el => el.dataset.v);
+    if (pressed !== '2') failures.push(`${w}px: resume expected 2 stars got ${pressed}`);
+    await shot(page, '12-resume', w);
 
     // 6. Terminal and error states
     for (const [sc, sel, n] of [['already', '#already', '13-already'], ['notfound', '#notfound', '14-notfound'], ['failed', '#failed', '15-failed'], ['no-address', '#happy', '16-no-address']]) {

@@ -172,10 +172,8 @@
 
       <div id="low" class="hidden">
         <h2>We're sorry we fell short.</h2>
-        <p>Please tell us what happened. This goes to our leadership team only, not online.</p>
+        <p>Please tell us what happened. This goes to our leadership team.</p>
         <div class="private">
-          <label for="fbAgent">Who did you work with?</label>
-          <select id="fbAgent"></select>
           <label for="fbComment">What happened?</label>
           <textarea id="fbComment" maxlength="3000" autocomplete="off"></textarea>
           <label class="check"><input type="checkbox" id="fbContact"> Please contact me about this</label>
@@ -236,7 +234,7 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
   var state = {
     rating: 0, path: null, status: 'new', token: null,
     firstName: '', addr1: '', addr2: '', role: 'unknown',
-    agents: [], agentName: '', email: '', dealId: null,
+    email: '', dealId: null,
     links: null, reviewText: ''
   };
 
@@ -285,16 +283,13 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
 
   function pathFor(r) { return r >= 4 ? 'happy' : 'low'; }
 
+  // Nothing locks until Submit: the path simply follows the current rating.
   function chooseRating(v) {
     paintStars(v, true);
     state.rating = v;
-    var wanted = pathFor(v);
-    // A low path never flips back to happy. A happy path may be lowered.
-    if (state.path === 'low' && wanted === 'happy') {
-      $('starsHint').textContent = 'Your rating is saved. You can still tell us more below.';
-      sendRating(v); return;
-    }
+    state.path = pathFor(v);
     $('starsHint').textContent = '';
+    renderPath();
     sendRating(v);
   }
 
@@ -310,9 +305,7 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
 
   function applyServer(res) {
     if (res.token) state.token = res.token;
-    if (res.path) state.path = res.path;
     if (res.status) state.status = res.status;
-    if (typeof res.rating === 'number' && res.rating > 0) { state.rating = res.rating; paintStars(res.rating, false); }
     if (res.links) state.links = res.links;
     renderPath();
   }
@@ -362,7 +355,7 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
     submitFeedback.disabled = true; submitFeedback.textContent = 'Sending';
     $('lowErr').textContent = '';
     post('review.feedback', {
-      rating: state.rating, agent: $('fbAgent').value, comment: comment,
+      rating: state.rating, comment: comment,
       contactMe: fbContact.checked, phone: fbContact.checked ? $('fbPhone').value.trim() : ''
     }).then(function (res) {
       submitFeedback.textContent = 'Send to our leadership';
@@ -370,18 +363,6 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
       applyServer(res);
     });
   });
-
-  function fillAgents() {
-    var sel = $('fbAgent');
-    sel.innerHTML = '';
-    var opts = state.agents.slice();
-    if (state.agentName && opts.indexOf(state.agentName) === -1) opts.unshift(state.agentName);
-    opts.push('Not sure');
-    opts.forEach(function (name) {
-      var o = document.createElement('option'); o.value = name; o.textContent = name; sel.appendChild(o);
-    });
-    sel.value = state.agentName || 'Not sure';
-  }
 
   // ---- Public links (after a 4 or 5 star submission). Copy synchronously inside
   // the tap so iOS Safari honours it, then let the link open in a new tab.
@@ -437,32 +418,22 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
     state.addr1 = INIT.addressLine1 || '';
     state.addr2 = INIT.addressLine2 || '';
     state.role = INIT.role || 'unknown';
-    state.agents = INIT.agents || [];
-    state.agentName = INIT.agentName || '';
     state.email = INIT.email || '';
     state.dealId = INIT.dealId || null;
     state.token = INIT.token || null;
-    state.path = INIT.lockedPath || null;
     state.status = INIT.status || 'new';
     state.links = INIT.links || null;
     fillHeadlines();
-    fillAgents();
     $('greeting').textContent = greeting();
 
     if (state.status === 'reviewed' || state.status === 'feedback') { show('already'); return; }
 
-    var r = Number(INIT.rating) || 0;
-    if (state.path) {
-      // Resume a request that already has a locked path.
-      paintStars(INIT.savedRating || 0, false);
-      state.rating = INIT.savedRating || 0;
-      renderPath();
-      if (r >= 1 && r <= 5 && r !== state.rating) chooseRating(r);
-      return;
-    }
     show('rate');
     paintStars(0, false);
-    if (r >= 1 && r <= 5) chooseRating(r);  // star tapped in the email
+    var r = Number(INIT.rating) || 0;               // star tapped in the email
+    var saved = Number(INIT.savedRating) || 0;      // an earlier, unsubmitted tap
+    if (r >= 1 && r <= 5) chooseRating(r);
+    else if (saved >= 1 && saved <= 5) { state.rating = saved; state.path = pathFor(saved); paintStars(saved, false); renderPath(); }
   }
   boot();
 })();
