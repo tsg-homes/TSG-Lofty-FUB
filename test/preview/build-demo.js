@@ -40,22 +40,17 @@ const demoBar = `
   .mailhead { max-width: 560px; margin: 0 auto; padding: 20px 12px 0; font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #5E6963; line-height: 1.5; }
   .mailhead b { color: #1D2620; }
 
-  /* Alternative looks, demo only. */
-  body[data-look="brass"] { --star-on: #9A6B2B; }
-  body[data-look="brass"] .star.on { color: #9A6B2B; }
-  body[data-look="meadow"] .sheet { padding-top: 0; overflow: hidden; }
-  body[data-look="meadow"] .sheet > section { padding-top: 32px; }
-  body[data-look="meadow"] h1, body[data-look="meadow"] .addr2 { background: #2F5240; color: #F6F1E6; margin: 0 -24px; padding: 0 24px; }
-  @media (min-width: 600px) { body[data-look="meadow"] h1, body[data-look="meadow"] .addr2 { margin: 0 -48px; padding: 0 48px; } }
-  body[data-look="meadow"] h1 { padding-top: 28px; }
-  body[data-look="meadow"] .addr2 { padding-bottom: 24px; margin-bottom: 28px; }
-  body[data-look="meadow"] .private { background: #EEF2EC; }
-  body[data-look="ink"] .band { background: #1D2620; }
-  body[data-look="ink"] .sheet { background: #FBF8F1; border-top: 6px solid #2F5240; }
-  body[data-look="ink"] .btn { background: #1D2620; }
-  body[data-look="ink"] .btn:hover { background: #2F5240; }
-  body[data-look="ink"] .btn[disabled] { background: #D9DCD7; }
-  body[data-look="ink"] footer { background: #2F5240; color: #F6F1E6; }
+  /* Previous look, demo only, for comparison. */
+  body[data-look="cream"] { --green: #F6F1E6; --green-deep: #FFFFFF; --green-line: #DDD8CC; --cream: #1D2620; --cream-soft: #5E6963; --star-empty: #C9CFC9; --disabled-bg: #D9DCD7; --disabled-ink: #5E6963; --error: #8A2E22; --field: #FFFFFF; }
+  body[data-look="cream"] .band { background: #2F5240; color: #F6F1E6; }
+  body[data-look="cream"] .btn { background: #2F5240; color: #FFFFFF; }
+  body[data-look="cream"] .btn:hover { background: #26432F; }
+  body[data-look="cream"] .btn[disabled], body[data-look="cream"] .btn[aria-disabled="true"] { background: #D9DCD7; color: #5E6963; }
+  body[data-look="cream"] .copied { color: #2F5240; }
+  body[data-look="cream"] .star.on svg { filter: none; stroke: none; }
+  body[data-look="cream"] .star svg { stroke: none; }
+  body[data-look="cream"] textarea, body[data-look="cream"] input[type=tel] { border-color: #9AA39D; }
+  body[data-look="cream"] .sheet { border-radius: 0; }
 </style>
 <nav class="demo" aria-label="Demo pages">
   <span>Page 1 is the email. Tap a star or the button to reach page 2.</span>
@@ -67,10 +62,8 @@ const demoBar = `
 </nav>
 <nav class="demo looks" aria-label="Looks">
   <span>Look:</span>
-  <a href="#" data-look="forest">Forest (current)</a>
-  <a href="#" data-look="brass">Brass stars</a>
-  <a href="#" data-look="meadow">Green headline block</a>
-  <a href="#" data-look="ink">Ink and cream</a>
+  <a href="#" data-look="green">Green, brass stars (new)</a>
+  <a href="#" data-look="cream">Cream (previous)</a>
 </nav>
 <div id="demoEmail" class="hidden">
   <div class="mailhead"><b>From:</b> Alex Clark &lt;alex@tsg.homes&gt;<br><b>Subject:</b> How was your experience with us?</div>
@@ -92,11 +85,11 @@ function __go() {
 }
 window.addEventListener('hashchange', __go);
 (function () {
-  var look = 'forest'; try { look = localStorage.getItem('tsgLook') || 'forest'; } catch (e) {}
+  var look = 'green'; try { look = localStorage.getItem('tsgLook2') || 'green'; } catch (e) {}
   document.body.setAttribute('data-look', look);
   document.querySelectorAll('.demo a[data-look]').forEach(function (a) {
     a.setAttribute('aria-current', a.dataset.look === look ? 'true' : 'false');
-    a.addEventListener('click', function (ev) { ev.preventDefault(); try { localStorage.setItem('tsgLook', a.dataset.look); } catch (e) {} document.body.setAttribute('data-look', a.dataset.look); document.querySelectorAll('.demo a[data-look]').forEach(function (b) { b.setAttribute('aria-current', b === a ? 'true' : 'false'); }); });
+    a.addEventListener('click', function (ev) { ev.preventDefault(); try { localStorage.setItem('tsgLook2', a.dataset.look); } catch (e) {} document.body.setAttribute('data-look', a.dataset.look); document.querySelectorAll('.demo a[data-look]').forEach(function (b) { b.setAttribute('aria-current', b === a ? 'true' : 'false'); }); });
   });
 })();`;
 
@@ -109,8 +102,8 @@ const mock = `
   window.__mockReset = function (init) { srv.status = init.status || 'new'; srv.token = init.token || null; };
   window.fetch = function (url, opts) {
     var b = JSON.parse(opts.body); var res = { ok: true };
-    if (b.action === 'review.rate') { if (!srv.token) srv.token = 'demo_' + Math.random().toString(36).slice(2); srv.status = 'rated'; res = { ok: true, token: srv.token, status: 'rated' }; }
-    else if (b.action === 'review.submit') { srv.status = 'reviewed'; res = { ok: true, status: 'reviewed', links: { google: 'https://www.google.com/maps', zillow: 'https://www.zillow.com/' } }; }
+    if (b.action === 'review.rate') { if (!srv.token) srv.token = 'demo_' + Math.random().toString(36).slice(2); srv.status = 'rated'; res = { ok: true, token: srv.token, status: 'rated', links: { google: 'https://www.google.com/maps', zillow: 'https://www.zillow.com/' } }; }
+    else if (b.action === 'review.submit') { srv.status = 'reviewed'; res = { ok: true, status: 'reviewed' }; }
     else if (b.action === 'review.feedback') { srv.status = 'feedback'; res = { ok: true, status: 'feedback' }; }
     return new Promise(function (r) { setTimeout(function () { r({ json: function () { return Promise.resolve(res); } }); }, 250); });
   };
@@ -120,9 +113,9 @@ html = html.replace('// ---- End server hand-off.', '// ---- End server hand-off
 html = html.replace(/\n  boot\(\);\n\}\)\(\);/, `
   window.__boot = function (init) {
     INIT = init;
-    state.rating = 0; state.path = null; state.token = null; state.status = 'new'; state.reviewText = ''; state.links = null;
+    state.rating = 0; state.path = null; state.token = null; state.status = 'new'; state.reviewText = ''; state.links = null; state.saved = false;
     reviewText.value = ''; fbComment.value = ''; fbContact.checked = false; $('fbPhone').value = ''; $('fbPhoneWrap').classList.add('hidden');
-    submitReview.disabled = true; submitFeedback.disabled = true; $('copied').textContent = ''; $('starsHint').textContent = '';
+    submitFeedback.disabled = true; $('copied').textContent = ''; $('starsHint').textContent = ''; state.locked = false; $('stars').classList.remove('locked'); $('rateQ').classList.remove('hidden'); starEls.forEach(function (el) { el.disabled = false; el.removeAttribute('aria-disabled'); });
     $('copyFallback').classList.add('hidden');
     boot();
   };

@@ -37,10 +37,10 @@ const MOCK_SERVER = `
     if (b.action === 'review.rate') {
       if (!srv.token) srv.token = 'tok_' + Math.random().toString(36).slice(2);
       srv.rating = b.rating; srv.status = 'rated';
-      res = { ok: true, token: srv.token, status: srv.status };
+      res = { ok: true, token: srv.token, status: srv.status, links: { google: 'https://g.page/r/EXAMPLE/review', zillow: 'https://www.zillow.com/profile/example-agent/' } };
     } else if (b.action === 'review.submit') {
       srv.status = 'reviewed';
-      res = { ok: true, status: 'reviewed', links: { google: 'https://g.page/r/EXAMPLE/review', zillow: 'https://www.zillow.com/profile/example-agent/' } };
+      res = { ok: true, status: 'reviewed' };
     } else if (b.action === 'review.feedback') {
       srv.status = 'feedback';
       res = { ok: true, status: 'feedback' };

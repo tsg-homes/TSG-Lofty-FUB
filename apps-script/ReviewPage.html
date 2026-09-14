@@ -9,44 +9,48 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --green: #2F5240;
-    --ink: #1D2620;
-    --cream: #F6F1E6;
-    --sheet: #FFFFFF;
-    --line: #DDD8CC;
-    --muted: #5E6963;
-    --disabled-bg: #D9DCD7;
-    --disabled-ink: #5E6963;
-    --star-empty: #C9CFC9;
-    --error: #8A2E22;
+    --green: #2F5240;        /* page ground */
+    --green-deep: #24402F;   /* panel and band */
+    --green-line: #3E6A53;   /* hairlines on green */
+    --ink: #1D2620;          /* text on white fields */
+    --cream: #F6F1E6;        /* text on green */
+    --cream-soft: #D6DFD8;   /* secondary text on green */
+    --brass: #9A6B2B;        /* filled stars only */
+    --star-empty: rgba(246, 241, 230, 0.35);
+    --field: #FFFFFF;
+    --disabled-bg: rgba(246, 241, 230, 0.14);
+    --disabled-ink: rgba(246, 241, 230, 0.55);
+    --error: #F2C3B9;
   }
   * { box-sizing: border-box; }
-  html { background: var(--cream); }
+  html { background: var(--green); }
   body {
     margin: 0;
-    background: var(--cream);
-    color: var(--ink);
+    background: var(--green);
+    color: var(--cream);
     font-family: 'Archivo', Arial, Helvetica, sans-serif;
     font-size: 17px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
   }
   .band {
-    background: var(--green);
+    background: var(--green-deep);
     color: var(--cream);
     text-align: center;
     padding: 16px 20px;
     font-family: 'Fraunces', Georgia, serif;
     font-size: 14px;
     letter-spacing: 3px;
+    border-bottom: 1px solid var(--green-line);
   }
   main { padding: 20px 16px 8px; }
   .sheet {
-    background: var(--sheet);
+    background: var(--green-deep);
     max-width: 560px;
     margin: 0 auto;
     padding: 32px 24px 36px;
-    border: 1px solid var(--line);
+    border: 1px solid var(--green-line);
+    border-radius: 6px;
   }
   @media (min-width: 600px) { .sheet { padding: 44px 48px 48px; } main { padding-top: 32px; } }
   h1 {
@@ -55,26 +59,29 @@
     font-size: 30px;
     line-height: 1.15;
     margin: 0 0 4px;
-    color: var(--ink);
+    color: var(--cream);
+    text-wrap: balance;
   }
   .addr2 {
     font-family: 'Fraunces', Georgia, serif;
     font-size: 19px;
-    margin: 0 0 24px;
-    color: var(--ink);
+    margin: 0 0 18px;
+    color: var(--cream-soft);
   }
+  .rule { width: 56px; height: 2px; background: var(--brass); border: 0; margin: 0 0 22px; }
   h2 {
     font-family: 'Fraunces', Georgia, serif;
     font-weight: 600;
     font-size: 24px;
     line-height: 1.2;
     margin: 0 0 12px;
+    color: var(--cream);
   }
   p { margin: 0 0 16px; }
-  .q { margin: 28px 0 8px; font-weight: 500; }
+  .q { margin: 26px 0 8px; font-weight: 500; }
 
   /* Stars */
-  .stars { display: flex; gap: 6px; justify-content: flex-start; margin: 4px 0 8px; }
+  .stars { display: flex; gap: 6px; margin: 4px 0 6px; }
   .star {
     appearance: none; -webkit-appearance: none;
     background: none; border: 0; padding: 4px; margin: 0;
@@ -82,49 +89,50 @@
     color: var(--star-empty);
     border-radius: 6px;
   }
-  .star svg { width: 100%; height: 100%; display: block; fill: currentColor; }
-  .star.on { color: var(--green); }
-  .star:focus-visible { outline: 3px solid var(--green); outline-offset: 2px; }
+  .star svg { width: 100%; height: 100%; display: block; fill: currentColor; stroke: rgba(246,241,230,0.45); stroke-width: 0.6; transition: fill 180ms ease; }
+  .star.on { color: var(--brass); }
+  .star.on svg { stroke: #C99A55; filter: drop-shadow(0 0 6px rgba(201, 154, 85, 0.35)); }
+  .star:focus-visible { outline: 3px solid var(--cream); outline-offset: 2px; }
   .star.pop svg { animation: pop 260ms ease-out; }
   @keyframes pop { 0% { transform: scale(1); } 45% { transform: scale(1.18); } 100% { transform: scale(1); } }
-  .star svg { transition: fill 180ms ease; }
-  @media (prefers-reduced-motion: reduce) {
-    .star.pop svg { animation: none; }
-    .star svg { transition: none; }
-  }
-  .stars-hint { font-size: 14px; color: var(--muted); margin: 0 0 8px; min-height: 22px; }
+  @media (prefers-reduced-motion: reduce) { .star.pop svg { animation: none; } .star svg { transition: none; } }
+  .stars.locked .star { cursor: default; }
+  .stars-hint { font-size: 14px; color: var(--cream-soft); margin: 0 0 8px; min-height: 22px; }
+
+  /* Steps */
+  ol.steps { margin: 0 0 8px; padding-left: 24px; }
+  ol.steps li { margin: 0 0 6px; padding-left: 4px; }
 
   /* Forms */
   label { display: block; font-weight: 500; margin: 18px 0 6px; }
-  textarea, input[type=text], input[type=tel], select {
+  textarea, input[type=text], input[type=tel] {
     width: 100%; font: inherit; color: var(--ink);
-    padding: 12px; border: 1px solid #9AA39D; border-radius: 4px; background: #fff;
+    padding: 12px; border: 1px solid transparent; border-radius: 4px; background: var(--field);
   }
-  textarea { min-height: 140px; resize: vertical; }
-  textarea[disabled], input[disabled] { background: var(--disabled-bg); border-color: var(--disabled-bg); color: var(--disabled-ink); cursor: not-allowed; }
-  .locked #happyIntro { color: var(--muted); }
-  textarea:focus, input:focus, select:focus { outline: 3px solid var(--green); outline-offset: 1px; border-color: var(--green); }
+  textarea { min-height: 150px; resize: vertical; }
+  textarea[disabled], input[disabled] { background: var(--disabled-bg); color: var(--disabled-ink); cursor: not-allowed; }
+  textarea:focus, input:focus { outline: 3px solid var(--brass); outline-offset: 1px; }
   .check { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0 0; font-weight: 400; }
-  .check input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--green); flex: none; }
+  .check input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--brass); flex: none; }
   .btn {
     display: inline-block; font: inherit; font-weight: 600; font-size: 16px;
-    background: var(--green); color: #fff; border: 0; border-radius: 4px;
+    background: var(--cream); color: var(--green-deep); border: 0; border-radius: 4px;
     padding: 14px 24px; cursor: pointer; text-decoration: none; text-align: center;
     min-width: 180px;
   }
-  .btn:hover { background: #26432F; }
-  .btn:focus-visible { outline: 3px solid var(--ink); outline-offset: 3px; }
-  .btn[disabled], .btn[aria-disabled="true"] { background: var(--disabled-bg); color: var(--disabled-ink); cursor: not-allowed; }
+  .btn:hover { background: #FFFFFF; }
+  .btn:focus-visible { outline: 3px solid var(--brass); outline-offset: 3px; }
+  .btn[disabled], .btn[aria-disabled="true"] { background: var(--disabled-bg); color: var(--disabled-ink); cursor: not-allowed; pointer-events: none; }
   .actions { margin-top: 22px; }
-  .links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+  .links { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
   .links .btn { flex: 1 1 200px; }
-  .copied { font-size: 15px; color: var(--green); font-weight: 500; margin-top: 12px; min-height: 22px; }
+  .copied { font-size: 15px; color: #E3C58C; font-weight: 500; margin-top: 12px; min-height: 22px; }
   .err { color: var(--error); font-size: 15px; margin-top: 10px; min-height: 22px; }
-  .small { font-size: 14px; color: var(--muted); }
-  .private { background: var(--cream); padding: 16px; border-radius: 4px; margin-top: 8px; }
+  .small { font-size: 14px; color: var(--cream-soft); }
+  .private { border: 1px solid var(--green-line); padding: 16px; border-radius: 4px; margin-top: 8px; }
   .hidden { display: none !important; }
-  footer { text-align: center; font-size: 11px; color: #6B7570; padding: 20px 16px 28px; }
-  a { color: var(--green); }
+  footer { text-align: center; font-size: 11px; color: var(--cream-soft); padding: 20px 16px 28px; letter-spacing: 0.5px; }
+  a { color: var(--cream); }
   .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
 </head>
@@ -133,9 +141,7 @@
 <main>
   <div class="sheet">
 
-    <section id="loading">
-      <p>One moment.</p>
-    </section>
+    <section id="loading"><p>One moment.</p></section>
 
     <section id="notfound" class="hidden">
       <h2>We couldn't find your record.</h2>
@@ -150,6 +156,7 @@
     <section id="rate" class="hidden">
       <h1 id="addr1"></h1>
       <p class="addr2" id="addr2"></p>
+      <hr class="rule" aria-hidden="true">
       <p id="greeting"></p>
 
       <p class="q" id="rateQ">How would you rate your experience with us?</p>
@@ -163,12 +170,20 @@
       <p class="stars-hint" id="starsHint" aria-live="polite"></p>
 
       <div id="happy" class="hidden">
-        <p id="happyIntro">Thank you. Would you tell us a little about your experience?</p>
+        <p id="happyIntro"></p>
+        <ol class="steps">
+          <li>Write your review below.</li>
+          <li>Tap Google or Zillow. Your review is copied and the site opens in a new tab.</li>
+          <li>Paste your review there and submit it.</li>
+        </ol>
         <label for="reviewText">Your review</label>
         <textarea id="reviewText" maxlength="3000" autocomplete="off"></textarea>
-        <div class="actions">
-          <button type="button" class="btn" id="submitReview" disabled>Submit review</button>
+        <div class="links">
+          <a class="btn" id="googleBtn" href="#" target="_blank" rel="noopener" aria-disabled="true">Post on Google</a>
+          <a class="btn" id="zillowBtn" href="#" target="_blank" rel="noopener" aria-disabled="true">Post on Zillow</a>
         </div>
+        <p class="copied" id="copied" aria-live="polite"></p>
+        <p class="small hidden" id="copyFallback"></p>
         <p class="err" id="happyErr" aria-live="polite"></p>
       </div>
 
@@ -189,32 +204,17 @@
         </div>
         <p class="err" id="lowErr" aria-live="polite"></p>
       </div>
-    </section>
 
-    <section id="doneHappy" class="hidden">
-      <h1 id="addr1b"></h1>
-      <p class="addr2" id="addr2b"></p>
-      <h2 id="doneHappyHead">Thank you.</h2>
-      <p>We've saved your review.</p>
-      <p>If you'd like to share it publicly, these buttons copy your words and open the site.</p>
-      <div class="links">
-        <a class="btn" id="googleBtn" href="#" target="_blank" rel="noopener">Post on Google</a>
-        <a class="btn" id="zillowBtn" href="#" target="_blank" rel="noopener">Post on Zillow</a>
+      <div id="doneLow" class="hidden">
+        <h2 id="doneLowHead">Thank you.</h2>
+        <p>Someone on our leadership team will read this personally.</p>
       </div>
-      <p class="copied" id="copied" aria-live="polite"></p>
-      <p class="small hidden" id="copyFallback"></p>
-    </section>
-
-    <section id="doneLow" class="hidden">
-      <h1 id="addr1c"></h1>
-      <p class="addr2" id="addr2c"></p>
-      <h2 id="doneLowHead">Thank you.</h2>
-      <p>Someone on our leadership team will read this personally.</p>
     </section>
 
     <section id="already" class="hidden">
       <h1 id="addr1d"></h1>
       <p class="addr2" id="addr2d"></p>
+      <hr class="rule" aria-hidden="true">
       <h2 id="alreadyHead">Thank you.</h2>
       <p>We've already received your review.</p>
     </section>
@@ -234,161 +234,119 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var state = {
-    rating: 0, path: null, status: 'new', token: null,
+    rating: 0, path: null, status: 'new', token: null, locked: false,
     firstName: '', addr1: '', addr2: '', role: 'unknown',
     email: '', dealId: null, emailRating: 0,
-    links: null, reviewText: ''
+    links: null, reviewText: '', saved: false
   };
 
-  function show(id) {
-    ['loading', 'notfound', 'failed', 'rate', 'doneHappy', 'doneLow', 'already'].forEach(function (s) {
-      $(s).classList.toggle('hidden', s !== id);
-    });
-  }
-
+  // ---- Copy, tailored to the contact.
   function greeting() {
-    var name = state.firstName ? 'Hi ' + state.firstName + '. ' : '';
-    var what = state.role === 'buyer' ? 'helping you buy this home'
-             : state.role === 'seller' ? 'helping you sell this home'
-             : 'working with you on this home';
-    return name + 'It was a pleasure ' + what + ', and thank you for trusting us with it.';
+    var hi = state.firstName ? 'Hi ' + state.firstName + '. ' : '';
+    if (state.role === 'buyer') return hi + 'It was a pleasure guiding you through buying your home. We’re excited for your next chapter and the memories you’ll make there.';
+    if (state.role === 'seller') return hi + 'It was a pleasure guiding you through the sale of your home. We’re excited for your next chapter.';
+    return hi + 'It was a pleasure guiding you through this move. We’re excited for your next chapter.';
+  }
+  function happyIntro() {
+    var who = state.role === 'buyer' ? 'buyers' : state.role === 'seller' ? 'sellers' : 'clients';
+    return 'Reviews are one of the main ways other ' + who + ' find us. If you enjoyed working with us, we’d be grateful if you shared how we helped, so others can have the same experience.';
   }
 
+  function show(id) {
+    ['loading', 'notfound', 'failed', 'rate', 'already'].forEach(function (s) { $(s).classList.toggle('hidden', s !== id); });
+  }
   function fillHeadlines() {
-    ['addr1', 'addr1b', 'addr1c', 'addr1d'].forEach(function (id) { $(id).textContent = state.addr1 || 'Your home'; });
-    ['addr2', 'addr2b', 'addr2c', 'addr2d'].forEach(function (id) {
-      $(id).textContent = state.addr2 || '';
-      $(id).classList.toggle('hidden', !state.addr2);
-    });
+    ['addr1', 'addr1d'].forEach(function (id) { $(id).textContent = state.addr1 || 'Your home'; });
+    ['addr2', 'addr2d'].forEach(function (id) { $(id).textContent = state.addr2 || ''; $(id).classList.toggle('hidden', !state.addr2); });
     var n = state.firstName ? 'Thank you, ' + state.firstName + '.' : 'Thank you.';
-    $('doneHappyHead').textContent = n;
-    $('doneLowHead').textContent = n;
-    $('alreadyHead').textContent = n;
+    $('doneLowHead').textContent = n; $('alreadyHead').textContent = n;
   }
 
   // ---- Stars: five buttons. Tap, or Tab to one and press Space or Enter.
+  // Locked when the rating came from the email: the star was the answer.
   var starEls = Array.prototype.slice.call(document.querySelectorAll('#stars .star'));
   function paintStars(v, animate) {
     starEls.forEach(function (el) {
-      var on = Number(el.dataset.v) <= v;
-      var was = el.classList.contains('on');
+      var on = Number(el.dataset.v) <= v, was = el.classList.contains('on');
       el.classList.toggle('on', on);
       el.setAttribute('aria-pressed', Number(el.dataset.v) === v ? 'true' : 'false');
-      if (animate && on && !was) {
-        el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop');
-      }
+      if (animate && on && !was) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
     });
   }
+  function lockStars(v) {
+    state.locked = true;
+    $('stars').classList.add('locked');
+    $('stars').setAttribute('aria-label', 'You rated us ' + v + (v === 1 ? ' star' : ' stars'));
+    $('rateQ').classList.add('hidden');
+    starEls.forEach(function (el) { el.disabled = true; el.setAttribute('aria-disabled', 'true'); });
+  }
   starEls.forEach(function (el) {
-    el.addEventListener('click', function () { chooseRating(Number(el.dataset.v)); });
+    el.addEventListener('click', function () { if (!state.locked) chooseRating(Number(el.dataset.v)); });
   });
-
   function pathFor(r) { return r >= 4 ? 'happy' : 'low'; }
 
-  // Nothing locks until Submit: the path simply follows the current rating.
   function chooseRating(v) {
     paintStars(v, true);
     state.rating = v;
     state.path = pathFor(v);
-    $('starsHint').textContent = '';
     renderPath();
     sendRating(v);
   }
-
   var rateSeq = 0;
   function sendRating(v) {
     var seq = ++rateSeq;
-    post('review.rate', { rating: v, emailRating: state.emailRating }).then(function (res) {
-      if (seq !== rateSeq) return;  // a newer tap superseded this one
-      if (!res || !res.ok) { showRateError(res); return; }
+    post('review.rate', { rating: v, emailRating: state.emailRating, locked: state.locked }).then(function (res) {
+      if (seq !== rateSeq) return;
+      if (!res || !res.ok) { $('starsHint').textContent = (res && res.error) || 'We couldn’t save that. Please try again.'; return; }
       applyServer(res);
     });
   }
-
   function applyServer(res) {
     if (res.token) state.token = res.token;
     if (res.status) state.status = res.status;
-    if (res.links) state.links = res.links;
+    if (res.links) { state.links = res.links; wireLinks(); }
     renderPath();
   }
-
   function renderPath() {
-    if (state.status === 'reviewed') { show('doneHappy'); wireLinks(); return; }
-    if (state.status === 'feedback') { show('doneLow'); return; }
     show('rate');
     var unrated = !state.path;
     $('happy').classList.toggle('hidden', !(state.path === 'happy' || unrated));
-    $('happy').classList.toggle('locked', unrated);
-    $('low').classList.toggle('hidden', state.path !== 'low');
+    $('low').classList.toggle('hidden', state.path !== 'low' || state.status === 'feedback');
+    $('doneLow').classList.toggle('hidden', !(state.path === 'low' && state.status === 'feedback'));
     reviewText.disabled = unrated;
-    submitReview.disabled = unrated || reviewText.value.trim().length === 0;
-    $('happyIntro').textContent = unrated ? 'Tap a star, then tell us a little about your experience.' : 'Thank you. Would you tell us a little about your experience?';
+    $('happyIntro').textContent = unrated ? 'Tap a star to begin.' : happyIntro();
+    updateLinkState();
   }
 
-  function showRateError(res) {
-    var msg = (res && res.error) || 'We couldn\'t save that. Please try again.';
-    $('starsHint').textContent = msg;
+  // ---- Happy path: write once, then Google or Zillow. The first tap saves the
+  // review (Sheet and FUB); every tap copies the text and opens the site.
+  var reviewText = $('reviewText');
+  reviewText.addEventListener('input', updateLinkState);
+  function updateLinkState() {
+    var ready = !reviewText.disabled && reviewText.value.trim().length > 0 && !!state.links;
+    [$('googleBtn'), $('zillowBtn')].forEach(function (el) { el.setAttribute('aria-disabled', ready ? 'false' : 'true'); el.tabIndex = ready ? 0 : -1; });
   }
-
-  // ---- Happy path
-  var reviewText = $('reviewText'), submitReview = $('submitReview');
-  reviewText.addEventListener('input', function () {
-    submitReview.disabled = reviewText.value.trim().length === 0;
-  });
-  submitReview.addEventListener('click', function () {
-    var text = reviewText.value.trim();
-    if (!text) return;
-    submitReview.disabled = true; submitReview.textContent = 'Saving';
-    $('happyErr').textContent = '';
-    post('review.submit', { rating: state.rating, text: text }).then(function (res) {
-      submitReview.textContent = 'Submit review';
-      if (!res || !res.ok) { submitReview.disabled = false; $('happyErr').textContent = (res && res.error) || 'We couldn\'t save that. Please try again.'; return; }
-      state.reviewText = text;
-      applyServer(res);
-    });
-  });
-
-  // ---- Low path
-  var fbComment = $('fbComment'), submitFeedback = $('submitFeedback'), fbContact = $('fbContact');
-  fbComment.addEventListener('input', function () {
-    submitFeedback.disabled = fbComment.value.trim().length === 0;
-  });
-  fbContact.addEventListener('change', function () {
-    $('fbPhoneWrap').classList.toggle('hidden', !fbContact.checked);
-  });
-  submitFeedback.addEventListener('click', function () {
-    var comment = fbComment.value.trim();
-    if (!comment) return;
-    submitFeedback.disabled = true; submitFeedback.textContent = 'Sending';
-    $('lowErr').textContent = '';
-    post('review.feedback', {
-      rating: state.rating, comment: comment,
-      contactMe: fbContact.checked, phone: fbContact.checked ? $('fbPhone').value.trim() : ''
-    }).then(function (res) {
-      submitFeedback.textContent = 'Send to our leadership';
-      if (!res || !res.ok) { submitFeedback.disabled = false; $('lowErr').textContent = (res && res.error) || 'We couldn\'t send that. Please try again.'; return; }
-      applyServer(res);
-    });
-  });
-
-  // ---- Public links (after a 4 or 5 star submission). Copy synchronously inside
-  // the tap so iOS Safari honours it, then let the link open in a new tab.
   function wireLinks() {
-    var g = $('googleBtn'), z = $('zillowBtn');
     var links = state.links || {};
-    setLink(g, links.google, 'google');
-    setLink(z, links.zillow, 'zillow');
+    setLink($('googleBtn'), links.google, 'google');
+    setLink($('zillowBtn'), links.zillow, 'zillow');
   }
   function setLink(el, url, site) {
     if (!url) { el.classList.add('hidden'); return; }
     el.classList.remove('hidden');
     el.href = url;
-    el.onclick = function () {
-      var ok = copyText(state.reviewText || '');
+    el.onclick = function (ev) {
+      if (el.getAttribute('aria-disabled') === 'true') { ev.preventDefault(); return; }
+      var text = reviewText.value.trim();
+      state.reviewText = text;
+      var ok = copyText(text);
       $('copied').textContent = ok ? 'Copied. Paste it into your review.' : 'Your review is below so you can copy it.';
-      if (!ok) { var fb = $('copyFallback'); fb.textContent = state.reviewText || ''; fb.classList.remove('hidden'); }
-      post('review.click', { site: site });
-      // default navigation continues
+      if (!ok) { var fb = $('copyFallback'); fb.textContent = text; fb.classList.remove('hidden'); }
+      post('review.submit', { rating: state.rating, text: text, site: site }).then(function (res) {
+        if (!res || !res.ok) { $('happyErr').textContent = (res && res.error) || 'We couldn’t save your review. Please try again.'; return; }
+        state.saved = true; state.status = res.status || 'reviewed';
+      });
+      // default navigation continues: the site opens in a new tab
     };
   }
   function copyText(text) {
@@ -406,21 +364,37 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
     return ok;
   }
 
+  // ---- Low path
+  var fbComment = $('fbComment'), submitFeedback = $('submitFeedback'), fbContact = $('fbContact');
+  fbComment.addEventListener('input', function () { submitFeedback.disabled = fbComment.value.trim().length === 0; });
+  fbContact.addEventListener('change', function () { $('fbPhoneWrap').classList.toggle('hidden', !fbContact.checked); });
+  submitFeedback.addEventListener('click', function () {
+    var comment = fbComment.value.trim();
+    if (!comment) return;
+    submitFeedback.disabled = true; submitFeedback.textContent = 'Sending';
+    $('lowErr').textContent = '';
+    post('review.feedback', {
+      rating: state.rating, comment: comment,
+      contactMe: fbContact.checked, phone: fbContact.checked ? $('fbPhone').value.trim() : ''
+    }).then(function (res) {
+      submitFeedback.textContent = 'Send to our leadership';
+      if (!res || !res.ok) { submitFeedback.disabled = false; $('lowErr').textContent = (res && res.error) || 'We couldn’t send that. Please try again.'; return; }
+      applyServer(res);
+    });
+  });
+
   // ---- Transport. Same shape as the other forms in this project: JSON POST to doPost.
   function post(action, data) {
     var body = { action: action, submitToken: SUBMIT_TOKEN, qaTestToken: QA_TEST_TOKEN, token: state.token, email: state.email, dealId: state.dealId, website: '' };
     for (var k in data) if (Object.prototype.hasOwnProperty.call(data, k)) body[k] = data[k];
     return fetch(ENDPOINT_URL, { method: 'POST', body: JSON.stringify(body) })
       .then(function (r) { return r.json(); })
-      .catch(function () { return { ok: false, error: 'We couldn\'t reach the server. Please try again.' }; });
+      .catch(function () { return { ok: false, error: 'We couldn’t reach the server. Please try again.' }; });
   }
 
   // ---- Boot
   function boot() {
-    if (!INIT || !INIT.ok) {
-      show(INIT && INIT.state === 'notfound' ? 'notfound' : 'failed');
-      return;
-    }
+    if (!INIT || !INIT.ok) { show(INIT && INIT.state === 'notfound' ? 'notfound' : 'failed'); return; }
     state.firstName = INIT.firstName || '';
     state.addr1 = INIT.addressLine1 || '';
     state.addr2 = INIT.addressLine2 || '';
@@ -432,16 +406,17 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
     state.links = INIT.links || null;
     fillHeadlines();
     $('greeting').textContent = greeting();
+    if (state.links) wireLinks();
 
     if (state.status === 'reviewed' || state.status === 'feedback') { show('already'); return; }
 
-    // Stars always start empty. The star tapped in the email (INIT.rating) is
-    // sent along with the first rating so it's recorded, but never preselected.
-    state.emailRating = Number(INIT.rating) || 0;
-    var saved = Number(INIT.savedRating) || 0;      // an earlier, unsubmitted tap on this page
-    if (saved >= 1 && saved <= 5) { state.rating = saved; state.path = pathFor(saved); paintStars(saved, false); }
-    else paintStars(0, false);
-    renderPath();
+    show('rate');
+    var r = Number(INIT.rating) || 0;           // star tapped in the email: the answer, locked
+    var saved = Number(INIT.savedRating) || 0;  // an earlier unsubmitted rating on this page
+    state.emailRating = r;
+    if (r >= 1 && r <= 5) { lockStars(r); chooseRating(r); }
+    else if (saved >= 1 && saved <= 5) { state.rating = saved; state.path = pathFor(saved); paintStars(saved, false); renderPath(); }
+    else { paintStars(0, false); renderPath(); }
   }
   boot();
 })();
