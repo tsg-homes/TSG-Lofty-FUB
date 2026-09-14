@@ -1,5 +1,7 @@
-// Builds a self-contained, clickable demo of the review page with a scenario
-// switcher and a mock server. Usage: node test/preview/build-demo.js <out.html>
+// Builds a self-contained, clickable demo: page 1 is the FUB email as the
+// client sees it; its stars and button lead to page 2, the review page, run
+// against a mock server. A look switcher previews alternative palettes.
+// Usage: node test/preview/build-demo.js <out.html>
 'use strict';
 const fs = require('fs');
 const path = require('path');
@@ -7,13 +9,25 @@ const { SCENARIOS, BASE_INIT } = require('./harness');
 
 const out = process.argv[2];
 if (!out) { console.error('usage: build-demo.js <out.html>'); process.exit(1); }
-let html = fs.readFileSync(path.join(__dirname, '..', '..', 'apps-script', 'ReviewPage.html'), 'utf8');
+const root = path.join(__dirname, '..', '..');
+let html = fs.readFileSync(path.join(root, 'apps-script', 'ReviewPage.html'), 'utf8');
 
 // Strip the document wrapper: the host page supplies doctype/html/head/body.
 html = html.replace(/^[\s\S]*?<title>/, '<title>').replace(/<\/head>\s*<body>/, '').replace(/<\/body>\s*<\/html>\s*$/, '');
+html = html.replace('<title>Your experience | The Stawasz Group</title>', '<title>TSG Client Review Demo</title>');
+
+// Page 1: the email, with sample merge values and links rewired to the demo.
+let email = fs.readFileSync(path.join(root, 'email', 'fub-review-email.html'), 'utf8')
+  .replace(/<!--[\s\S]*?-->/, '')
+  .replace(/%contact_first_name%/g, 'Molly').replace(/%agent_name%/g, 'Alex Clark')
+  .replace(/https:\/\/script\.google\.com\/macros\/s\/[^"?]+\/exec\?page=review&e=%contact_email%&r=(\d)/g, '#email-$1')
+  .replace(/https:\/\/script\.google\.com\/macros\/s\/[^"?]+\/exec\?page=review&e=%contact_email%/g, '#button');
 
 const scenarios = {};
-for (const k of ['email-5', 'email-2', 'button', 'seller-4', 'already']) scenarios[k] = Object.assign({}, BASE_INIT, SCENARIOS[k].init);
+for (let r = 1; r <= 5; r++) scenarios['email-' + r] = Object.assign({}, BASE_INIT, { rating: r });
+scenarios['button'] = Object.assign({}, BASE_INIT, { rating: 0 });
+scenarios['seller-4'] = Object.assign({}, BASE_INIT, SCENARIOS['seller-4'].init);
+scenarios['already'] = Object.assign({}, BASE_INIT, SCENARIOS['already'].init);
 
 const demoBar = `
 <style>
@@ -21,29 +35,78 @@ const demoBar = `
   .demo span { opacity: .75; }
   .demo a { color: #F6F1E6; text-decoration: none; padding: 5px 10px; border: 1px solid rgba(246,241,230,.35); border-radius: 3px; }
   .demo a[aria-current="true"] { background: #2F5240; border-color: #2F5240; }
+  .demo.looks { background: #26322B; }
+  #demoEmail { background: #F6F1E6; padding-bottom: 24px; }
+  .mailhead { max-width: 560px; margin: 0 auto; padding: 20px 12px 0; font-family: Arial, Helvetica, sans-serif; font-size: 13px; color: #5E6963; line-height: 1.5; }
+  .mailhead b { color: #1D2620; }
+
+  /* Alternative looks, demo only. */
+  body[data-look="brass"] { --star-on: #9A6B2B; }
+  body[data-look="brass"] .star.on { color: #9A6B2B; }
+  body[data-look="meadow"] .sheet { padding-top: 0; overflow: hidden; }
+  body[data-look="meadow"] .sheet > section { padding-top: 32px; }
+  body[data-look="meadow"] h1, body[data-look="meadow"] .addr2 { background: #2F5240; color: #F6F1E6; margin: 0 -24px; padding: 0 24px; }
+  @media (min-width: 600px) { body[data-look="meadow"] h1, body[data-look="meadow"] .addr2 { margin: 0 -48px; padding: 0 48px; } }
+  body[data-look="meadow"] h1 { padding-top: 28px; }
+  body[data-look="meadow"] .addr2 { padding-bottom: 24px; margin-bottom: 28px; }
+  body[data-look="meadow"] .private { background: #EEF2EC; }
+  body[data-look="ink"] .band { background: #1D2620; }
+  body[data-look="ink"] .sheet { background: #FBF8F1; border-top: 6px solid #2F5240; }
+  body[data-look="ink"] .btn { background: #1D2620; }
+  body[data-look="ink"] .btn:hover { background: #2F5240; }
+  body[data-look="ink"] .btn[disabled] { background: #D9DCD7; }
+  body[data-look="ink"] footer { background: #2F5240; color: #F6F1E6; }
 </style>
-<nav class="demo" aria-label="Demo scenarios">
-  <span>Try it as a client. Arriving from:</span>
-  <a href="#email-5" data-sc="email-5">5-star tap</a>
-  <a href="#email-2" data-sc="email-2">2-star tap</a>
-  <a href="#button" data-sc="button">Rate button</a>
-  <a href="#seller-4" data-sc="seller-4">Seller, 4 stars</a>
+<nav class="demo" aria-label="Demo pages">
+  <span>Page 1 is the email. Tap a star or the button to reach page 2.</span>
+  <a href="#email" data-sc="email">Email</a>
+  <a href="#button" data-sc="button">Review page, unrated</a>
+  <a href="#seller-4" data-sc="seller-4">Seller</a>
   <a href="#already" data-sc="already">Already reviewed</a>
-  <span>Mock data. Nothing is saved. Google and Zillow buttons open placeholder pages.</span>
-</nav>`;
+  <span>Mock data. Nothing is saved.</span>
+</nav>
+<nav class="demo looks" aria-label="Looks">
+  <span>Look:</span>
+  <a href="#" data-look="forest">Forest (current)</a>
+  <a href="#" data-look="brass">Brass stars</a>
+  <a href="#" data-look="meadow">Green headline block</a>
+  <a href="#" data-look="ink">Ink and cream</a>
+</nav>
+<div id="demoEmail" class="hidden">
+  <div class="mailhead"><b>From:</b> Alex Clark &lt;alex@tsg.homes&gt;<br><b>Subject:</b> How was your experience with us?</div>
+  ${email}
+</div>`;
 
 const initCode = `var __SCENARIOS = ${JSON.stringify(scenarios).replace(/</g, '\\u003c')};
-var __SC = (location.hash || '#email-5').slice(1); if (!__SCENARIOS[__SC]) __SC = 'email-5';
-document.querySelectorAll('.demo a').forEach(function (a) { a.setAttribute('aria-current', a.dataset.sc === __SC ? 'true' : 'false'); });
-window.addEventListener('hashchange', function () { location.reload(); });
-var INIT = __SCENARIOS[__SC];`;
+var INIT = { ok: false, state: 'error' };
+function __pick() { var sc = (location.hash || '#email').slice(1); return (sc !== 'email' && !__SCENARIOS[sc]) ? 'email' : sc; }
+function __go() {
+  var sc = __pick();
+  document.querySelectorAll('.demo a[data-sc]').forEach(function (a) { a.setAttribute('aria-current', a.dataset.sc === sc || (sc.indexOf('email-') === 0 && a.dataset.sc === 'button') ? 'true' : 'false'); });
+  var onEmail = sc === 'email';
+  document.getElementById('demoEmail').classList.toggle('hidden', !onEmail);
+  document.querySelector('.band').classList.toggle('hidden', onEmail);
+  document.querySelector('main').classList.toggle('hidden', onEmail);
+  document.querySelector('footer').classList.toggle('hidden', onEmail);
+  if (!onEmail && window.__boot) { window.__mockReset(__SCENARIOS[sc]); window.__boot(__SCENARIOS[sc]); window.scrollTo(0, 0); }
+}
+window.addEventListener('hashchange', __go);
+(function () {
+  var look = 'forest'; try { look = localStorage.getItem('tsgLook') || 'forest'; } catch (e) {}
+  document.body.setAttribute('data-look', look);
+  document.querySelectorAll('.demo a[data-look]').forEach(function (a) {
+    a.setAttribute('aria-current', a.dataset.look === look ? 'true' : 'false');
+    a.addEventListener('click', function (ev) { ev.preventDefault(); try { localStorage.setItem('tsgLook', a.dataset.look); } catch (e) {} document.body.setAttribute('data-look', a.dataset.look); document.querySelectorAll('.demo a[data-look]').forEach(function (b) { b.setAttribute('aria-current', b === a ? 'true' : 'false'); }); });
+  });
+})();`;
 
 html = html.replace('var INIT = <?!= initJson ?>;', initCode);
 html = html.replace("'<?= baseUrl ?>'", "'https://example.invalid/exec'").replace("'<?= submitToken ?>'", "'demo'").replace("'<?= qaTestToken ?>'", "''");
 
 const mock = `
 (function(){
-  var srv = { status: INIT.status || 'new', token: INIT.token || null };
+  var srv = { status: 'new', token: null };
+  window.__mockReset = function (init) { srv.status = init.status || 'new'; srv.token = init.token || null; };
   window.fetch = function (url, opts) {
     var b = JSON.parse(opts.body); var res = { ok: true };
     if (b.action === 'review.rate') { if (!srv.token) srv.token = 'demo_' + Math.random().toString(36).slice(2); srv.status = 'rated'; res = { ok: true, token: srv.token, status: 'rated' }; }
@@ -53,6 +116,19 @@ const mock = `
   };
 })();`;
 html = html.replace('// ---- End server hand-off.', '// ---- End server hand-off.' + mock);
+// Demo hook: restart the page in place for a new scenario, resetting form state.
+html = html.replace(/\n  boot\(\);\n\}\)\(\);/, `
+  window.__boot = function (init) {
+    INIT = init;
+    state.rating = 0; state.path = null; state.token = null; state.status = 'new'; state.reviewText = ''; state.links = null;
+    reviewText.value = ''; fbComment.value = ''; fbContact.checked = false; $('fbPhone').value = ''; $('fbPhoneWrap').classList.add('hidden');
+    submitReview.disabled = true; submitFeedback.disabled = true; $('copied').textContent = ''; $('starsHint').textContent = '';
+    $('copyFallback').classList.add('hidden');
+    boot();
+  };
+  boot(); __go();
+})();`);
+if (!html.includes('window.__boot')) throw new Error('boot hook not applied');
 html = html.replace('<div class="band">THE STAWASZ GROUP</div>', demoBar + '\n<div class="band">THE STAWASZ GROUP</div>');
 if (html.includes('<?')) throw new Error('scriptlet left in demo');
 fs.writeFileSync(out, html);

@@ -101,6 +101,8 @@
     padding: 12px; border: 1px solid #9AA39D; border-radius: 4px; background: #fff;
   }
   textarea { min-height: 140px; resize: vertical; }
+  textarea[disabled], input[disabled] { background: var(--disabled-bg); border-color: var(--disabled-bg); color: var(--disabled-ink); cursor: not-allowed; }
+  .locked #happyIntro { color: var(--muted); }
   textarea:focus, input:focus, select:focus { outline: 3px solid var(--green); outline-offset: 1px; border-color: var(--green); }
   .check { display: flex; align-items: flex-start; gap: 10px; margin: 18px 0 0; font-weight: 400; }
   .check input { width: 22px; height: 22px; margin: 2px 0 0; accent-color: var(--green); flex: none; }
@@ -161,7 +163,7 @@
       <p class="stars-hint" id="starsHint" aria-live="polite"></p>
 
       <div id="happy" class="hidden">
-        <p>Thank you. Would you tell us a little about your experience?</p>
+        <p id="happyIntro">Thank you. Would you tell us a little about your experience?</p>
         <label for="reviewText">Your review</label>
         <textarea id="reviewText" maxlength="3000" autocomplete="off"></textarea>
         <div class="actions">
@@ -234,7 +236,7 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
   var state = {
     rating: 0, path: null, status: 'new', token: null,
     firstName: '', addr1: '', addr2: '', role: 'unknown',
-    email: '', dealId: null,
+    email: '', dealId: null, emailRating: 0,
     links: null, reviewText: ''
   };
 
@@ -296,7 +298,7 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
   var rateSeq = 0;
   function sendRating(v) {
     var seq = ++rateSeq;
-    post('review.rate', { rating: v }).then(function (res) {
+    post('review.rate', { rating: v, emailRating: state.emailRating }).then(function (res) {
       if (seq !== rateSeq) return;  // a newer tap superseded this one
       if (!res || !res.ok) { showRateError(res); return; }
       applyServer(res);
@@ -314,8 +316,13 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
     if (state.status === 'reviewed') { show('doneHappy'); wireLinks(); return; }
     if (state.status === 'feedback') { show('doneLow'); return; }
     show('rate');
-    $('happy').classList.toggle('hidden', state.path !== 'happy');
+    var unrated = !state.path;
+    $('happy').classList.toggle('hidden', !(state.path === 'happy' || unrated));
+    $('happy').classList.toggle('locked', unrated);
     $('low').classList.toggle('hidden', state.path !== 'low');
+    reviewText.disabled = unrated;
+    submitReview.disabled = unrated || reviewText.value.trim().length === 0;
+    $('happyIntro').textContent = unrated ? 'Tap a star, then tell us a little about your experience.' : 'Thank you. Would you tell us a little about your experience?';
   }
 
   function showRateError(res) {
@@ -428,12 +435,13 @@ var QA_TEST_TOKEN = '<?= qaTestToken ?>';
 
     if (state.status === 'reviewed' || state.status === 'feedback') { show('already'); return; }
 
-    show('rate');
-    paintStars(0, false);
-    var r = Number(INIT.rating) || 0;               // star tapped in the email
-    var saved = Number(INIT.savedRating) || 0;      // an earlier, unsubmitted tap
-    if (r >= 1 && r <= 5) chooseRating(r);
-    else if (saved >= 1 && saved <= 5) { state.rating = saved; state.path = pathFor(saved); paintStars(saved, false); renderPath(); }
+    // Stars always start empty. The star tapped in the email (INIT.rating) is
+    // sent along with the first rating so it's recorded, but never preselected.
+    state.emailRating = Number(INIT.rating) || 0;
+    var saved = Number(INIT.savedRating) || 0;      // an earlier, unsubmitted tap on this page
+    if (saved >= 1 && saved <= 5) { state.rating = saved; state.path = pathFor(saved); paintStars(saved, false); }
+    else paintStars(0, false);
+    renderPath();
   }
   boot();
 })();

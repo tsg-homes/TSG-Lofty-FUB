@@ -25,7 +25,16 @@ async function shot(page, name, w) {
 
     // 1. Email star tap, 5 stars -> happy path -> submit -> links -> copy
     await page.setContent(buildPreview('email-5'));
-    await page.waitForSelector('#happy:not(.hidden)');
+    await page.waitForSelector('#rate:not(.hidden)');
+    const lockedBox = await page.$eval('#reviewText', el => el.disabled);
+    if (!lockedBox) failures.push(`${w}px: review box not locked before a rating`);
+    const pre = await page.$$eval('.star.on', els => els.length);
+    if (pre !== 0) failures.push(`${w}px: stars preselected from email (${pre})`);
+    await shot(page, '00-arrival-locked', w);
+    await page.click('.star[data-v="5"]');
+    await page.waitForSelector('#happy:not(.locked)');
+    const sent = await page.evaluate(() => window.__mockServer.calls[0]);
+    if (!sent || sent.emailRating !== 5) failures.push(`${w}px: email rating not carried (${JSON.stringify(sent)})`);
     await shot(page, '01-happy-empty', w);
     await page.fill('#reviewText', 'Alex made the whole process feel calm. Every question got a clear answer the same day, and we always knew what was coming next.');
     await shot(page, '02-happy-filled', w);
@@ -40,6 +49,8 @@ async function shot(page, name, w) {
 
     // 2. Email star tap, 2 stars -> low path -> fill -> send
     await page.setContent(buildPreview('email-2'));
+    await page.waitForSelector('#rate:not(.hidden)');
+    await page.click('.star[data-v="2"]');
     await page.waitForSelector('#low:not(.hidden)');
     await shot(page, '05-low-empty', w);
     await page.fill('#fbComment', 'Showings were often rescheduled at the last minute and we struggled to reach anyone on weekends.');
@@ -72,7 +83,9 @@ async function shot(page, name, w) {
 
     // 4. Seller copy
     await page.setContent(buildPreview('seller-4'));
-    await page.waitForSelector('#happy:not(.hidden)');
+    await page.waitForSelector('#rate:not(.hidden)');
+    await page.click('.star[data-v="4"]');
+    await page.waitForSelector('#happy:not(.locked)');
     const g = await page.textContent('#greeting');
     if (!/sell this home/.test(g)) failures.push(`${w}px: seller greeting wrong: ${g}`);
     await shot(page, '11-seller', w);
@@ -85,7 +98,7 @@ async function shot(page, name, w) {
     await shot(page, '12-resume', w);
 
     // 6. Terminal and error states
-    for (const [sc, sel, n] of [['already', '#already', '13-already'], ['notfound', '#notfound', '14-notfound'], ['failed', '#failed', '15-failed'], ['no-address', '#happy', '16-no-address']]) {
+    for (const [sc, sel, n] of [['already', '#already', '13-already'], ['notfound', '#notfound', '14-notfound'], ['failed', '#failed', '15-failed'], ['no-address', '#rate', '16-no-address']]) {
       await page.setContent(buildPreview(sc));
       await page.waitForSelector(`${sel}:not(.hidden)`);
       await shot(page, n, w);
